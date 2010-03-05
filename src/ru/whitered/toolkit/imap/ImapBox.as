@@ -125,6 +125,8 @@ package ru.whitered.toolkit.imap
 					}
 				}
 			}
+			
+			if(commandBody.length > 0) buffer = commandBody + buffer;
 		}
 
 		
@@ -208,7 +210,7 @@ package ru.whitered.toolkit.imap
 			}
 			else if(selectedMailbox.numMessagesExist == 0)
 			{
-				onFetchSuccess.dispatch(null);
+				handleFetchSuccess(new Vector.<MailMessage>());
 			}
 			else
 			{
@@ -223,6 +225,7 @@ package ru.whitered.toolkit.imap
 		
 		private function handleFetchSuccess(messages:Vector.<MailMessage>):void 
 		{
+			selectedMailbox.messages = messages;
 			onFetchSuccess.dispatch(messages);
 		}
 
