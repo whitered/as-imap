@@ -1,5 +1,7 @@
 package  
 {
+	import ru.whitered.toolkit.imap.data.MailMessage;
+	import ru.whitered.toolkit.imap.data.Mailbox;
 	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.ImapBox;
 	import ru.whitered.toolkit.imap.socket.ImapSocket;
@@ -22,15 +24,34 @@ package
 			imap = new ImapBox(new ImapSocket("192.168.1.51", 143)); 
 			imap.onConnect.addCallback(handleConnect);
 			imap.onLogin.addCallback(handleLogin );
+			
 			imap.onSelectSuccess.addCallback(handleSelectSuccess);
 			imap.onSelectFailure.addCallback(handleSelectFailure);
+			
+			imap.onFetchSuccess.addCallback(handleFetchSuccess);
+			imap.onFetchFailure.addCallback(handleFetchFailure);
 		}
 
 		
 		
-		private function handleSelectSuccess(name:String):void 
+		private function handleFetchSuccess(messages:Vector.<MailMessage>):void 
 		{
-			Logger.debug(this, "mailbox selected:", name);
+			Logger.debug(this, "Messages fetched:", messages);
+		}
+
+		
+		
+		private function handleFetchFailure(message:String):void 
+		{
+			Logger.debug(this, "fetch failed:", message);
+		}
+
+		
+		
+		private function handleSelectSuccess(mailbox:Mailbox):void 
+		{
+			Logger.debug(this, "mailbox selected:", mailbox.name, ",", mailbox.numMessagesExist, "messages exist");
+			imap.fetchAll();
 		}
 
 		
@@ -45,13 +66,13 @@ package
 		private function handleConnect() : void 
 		{
 			imap.login("tmp06", "qwerty");
+			imap.select("INBOX");
 		}
 		
 		
 			
 		private function handleLogin () : void 
 		{
-			imap.select("INBOX.Draft");
 		}
 
 		

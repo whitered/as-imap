@@ -1,5 +1,10 @@
 package ru.whitered.toolkit.imap 
 {
+	import ru.whitered.toolkit.imap.data.MailMessage;
+
+	import adobe.utils.CustomActions;
+	import ru.whitered.toolkit.imap.data.Mailbox;
+	import ru.whitered.toolkit.imap.commands.ImapFetchCommand;
 	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.commands.IImapCommand;
@@ -27,12 +32,18 @@ package ru.whitered.toolkit.imap
 		public const onSelectSuccess:Signal = new Signal();
 		public const onSelectFailure:Signal = new Signal();
 		
+		public const onFetchSuccess:Signal = new Signal();
+		public const onFetchFailure:Signal = new Signal();
+		
 
 		
 		private var socket:ISocket;
 		private var buffer:String = "";
 		private var lastID:uint = 0;
 		private const commands:Dictionary = new Dictionary();
+		
+		
+		private var selectedMailbox:Mailbox;
 
 		
 		
@@ -80,8 +91,7 @@ package ru.whitered.toolkit.imap
 				lineLength = buffer.indexOf(NEWLINE) + 2;
 				if(lineLength < 2)
 				{
-					Logger.debug(this, "response not complete:", buffer);
-					throw new Error("Response not complete: " + buffer);
+					Logger.debug(this, "response not complete, rolling back:", buffer);
 					buffer = commandBody + buffer;
 					return;
 				}
@@ -93,17 +103,17 @@ package ru.whitered.toolkit.imap
 					
 					//Logger.debug(this, "checking line:", line);
 					var words:Vector.<String> = Vector.<String>(line.split(" ", 3));
-					if(words[0] == "*")
+					if(words.length > 0 && words[0] == "*")
 					{
 						continue;
 					}
-					else if(words[1] == "OK" || words[1] == "BAD" || words[1] == "NO")
+					else if(words.length > 1 && (words[1] == "OK" || words[1] == "BAD" || words[1] == "NO"))
 					{
 						var command:IImapCommand = commands[words[0]];
 						if(command)
 						{
 							//Logger.debug(this, "processing with command:", command, commandBody);
-							command.processResponse(message);
+							command.processResponse(commandBody);
 							delete commands[words[0]];
 						}
 						else
@@ -171,16 +181,56 @@ package ru.whitered.toolkit.imap
 
 		
 		
-		private function handleSelectSuccess(name:String):void 
+		private function handleSelectSuccess(mailbox:Mailbox):void 
 		{
-			onSelectSuccess.dispatch(name);
+			selectedMailbox = mailbox;
+			onSelectSuccess.dispatch(mailbox);
 		}
 
 		
 		
 		private function handleSelectFailure(message:String):void 
 		{
+			selectedMailbox = null;
 			onSelectFailure.dispatch(message);
+		}
+		
+		
+		
+		//----------------------------------------------------------------------
+		// fetch
+		//----------------------------------------------------------------------
+		public function fetchAll():void
+		{
+			if(!selectedMailbox)
+			{
+				onFetchFailure.dispatch("No mailbox is selected!");
+			}
+			else if(selectedMailbox.numMessagesExist == 0)
+			{
+				onFetchSuccess.dispatch(null);
+			}
+			else
+			{
+				const command:ImapFetchCommand = new ImapFetchCommand(1, selectedMailbox.numMessagesExist);
+				command.onSuccess.addCallback(handleFetchSuccess);
+				command.onFailure.addCallback(handleFetchFailure);
+				sendCommand(command);
+			}
+		}
+
+		
+		
+		private function handleFetchSuccess(messages:Vector.<MailMessage>):void 
+		{
+			onFetchSuccess.dispatch(messages);
+		}
+
+		
+		
+		private function handleFetchFailure(message:String):void 
+		{
+			onFetchFailure.dispatch(message);
 		}
 	}
 }

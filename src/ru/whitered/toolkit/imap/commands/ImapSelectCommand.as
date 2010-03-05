@@ -1,5 +1,6 @@
 package ru.whitered.toolkit.imap.commands 
 {
+	import ru.whitered.toolkit.imap.data.Mailbox;
 	import ru.whitered.kote.Signal;
 	
 	import ru.whitered.toolkit.imap.ImapBox;
@@ -39,7 +40,15 @@ package ru.whitered.toolkit.imap.commands
 			switch(lastLineWords[1])
 			{
 				case "OK":
-					onSuccess.dispatch(name);
+					const mailbox:Mailbox = new Mailbox(name);
+					
+					for each(var line:String in lines)
+					{
+						var words:Vector.<String> = Vector.<String>(line.split(" "));
+						if(words.length > 2 && words[2] == "EXISTS") mailbox.numMessagesExist = int(words[1]);
+					}
+					
+					onSuccess.dispatch(mailbox);
 					break;
 					
 				case "NO":
