@@ -1,7 +1,8 @@
 package  
 {
+	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.ImapBox;
-	import ru.whitered.toolkit.imap.ImapSocket;
+	import ru.whitered.toolkit.imap.socket.ImapSocket;
 
 	import flash.display.Sprite;
 
@@ -21,6 +22,22 @@ package
 			imap = new ImapBox(new ImapSocket("192.168.1.51", 143)); 
 			imap.onConnect.addCallback(handleConnect);
 			imap.onLogin.addCallback(handleLogin );
+			imap.onSelectSuccess.addCallback(handleSelectSuccess);
+			imap.onSelectFailure.addCallback(handleSelectFailure);
+		}
+
+		
+		
+		private function handleSelectSuccess(name:String):void 
+		{
+			Logger.debug(this, "mailbox selected:", name);
+		}
+
+		
+		
+		private function handleSelectFailure(message:String):void 
+		{
+			Logger.debug(this, "select failed:", message);
 		}
 
 		
@@ -34,7 +51,7 @@ package
 			
 		private function handleLogin () : void 
 		{
-			imap.list();
+			imap.select("INBOX.Draft");
 		}
 
 		

@@ -1,6 +1,8 @@
-package ru.whitered.toolkit.imap 
+package ru.whitered.toolkit.imap.commands 
 {
+	
 	import ru.whitered.kote.Signal;
+	import ru.whitered.toolkit.debug.logger.Logger;
 
 	/**
 	 * @author whitered
@@ -31,11 +33,11 @@ package ru.whitered.toolkit.imap
 		
 		
 		
-		public function processResponse(response:String):Boolean
+		public function processResponse(response:String):void
 		{
 			const status:String = response.split(" ")[1];
 			if(status == "OK") onSuccess.dispatch();
-			return true;
+			else Logger.debug(this, "Login not OK:", response);
 		}
 	}
 }

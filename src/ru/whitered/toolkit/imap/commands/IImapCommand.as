@@ -1,4 +1,4 @@
-package ru.whitered.toolkit.imap 
+package ru.whitered.toolkit.imap.commands 
 {
 
 	/**
@@ -7,6 +7,6 @@ package ru.whitered.toolkit.imap
 	public interface IImapCommand 
 	{
 		function getCommand():String;
-		function processResponse(response:String):Boolean;
+		function processResponse(response:String):void;
 	}
 }

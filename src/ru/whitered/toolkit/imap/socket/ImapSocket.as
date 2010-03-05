@@ -1,4 +1,4 @@
-package ru.whitered.toolkit.imap 
+package ru.whitered.toolkit.imap.socket 
 {
 	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.debug.logger.Logger;
