@@ -1,9 +1,9 @@
 package ru.whitered.toolkit.imap.commands 
 {
 	import ru.whitered.kote.Signal;
-	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.ImapBox;
 	import ru.whitered.toolkit.imap.data.MailMessage;
+	import ru.whitered.toolkit.utils.StringUtil;
 
 	/**
 	 * @author whitered
@@ -31,20 +31,22 @@ package ru.whitered.toolkit.imap.commands
 		
 		public function getCommand():String
 		{
-			return "FETCH " + startIndex + ":" + endIndex + " (BODY.PEEK[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS)";
+			//return "FETCH " + startIndex + ":" + endIndex + " (BODY.PEEK[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS)";
+			//return "FETCH " + startIndex + ":" + endIndex + " (BODY.PEEK[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS BODY[TEXT])";
+			return "FETCH " + startIndex + ":" + endIndex + " (BODY[HEADER.FIELDS (Date From Subject To Alliance Pid)] BODY[TEXT])";
 		}
 		
 		
 		
 		public function processResponse(response:String):void
 		{
-			Logger.debug(this, response);
 			const lines:Vector.<String> = Vector.<String>(response.split(ImapBox.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			switch(lastLineWords[1])
 			{
 				case "OK":
-					const messages:Vector.<MailMessage> = parseMessages(lines);
+					//const messages:Vector.<MailMessage> = parseMessages(lines);
+					const messages:Vector.<MailMessage> = parseResponse(response);
 					onSuccess.dispatch(messages);
 					break;
 					
@@ -54,43 +56,73 @@ package ru.whitered.toolkit.imap.commands
 					break;
 			}
 		}
+
 		
 		
-		
-		private function parseMessages(lines:Vector.<String>):Vector.<MailMessage>
+		private function parseResponse(response:String):Vector.<MailMessage> 
 		{
+			const messageSources:Vector.<String> = Vector.<String>(response.split("\r\n)\r\n"));
 			const messages:Vector.<MailMessage> = new Vector.<MailMessage>();
-			var words:Vector.<String>;
-			var message:MailMessage;
-			for each(var line:String in lines)
+			
+			var len:int;
+			var md1:Array;
+			var md2:Array;
+			var headers:String;
+			var body:String;
+			for each(var source:String in messageSources)
 			{
-				words = Vector.<String>(line.split(" "));
-				if(words.length > 0) switch(words[0])
+				md1 = source.match(/\* (\d+) FETCH [^\r]+ \{(\d+)\}\r\n/mi);
+				if(!md1) continue;
+				
+				source = source.substr(source.indexOf(md1[0]) + md1[0].length);
+				len = int(md1[2]);
+				headers = StringUtil.substringBytes(source, 0, len);
+				source = source.substr(headers.length);
+				
+				md2 = source.match(/BODY\[TEXT\] \{(\d+)\}\r\n/mi);
+				source = source.substr(source.indexOf(md2[0]) + md2[0].length);
+				body = StringUtil.substringBytes(source, 0, md2[1]);
+				
+				messages.push(parseMailMessage(md1[1], headers, body));
+			}
+			return messages;
+		}
+
+		
+		
+		private function parseMailMessage(id:int, headers:String, body:String):MailMessage
+		{
+			const msg:MailMessage = new MailMessage();
+			msg.id = id;
+			msg.body = body;
+			
+			var words:Array;
+			for each(var header:String in headers.split("\r\n"))
+			{
+				words = header.split(" ");
+				if(words.length < 2) continue;
+				
+				switch(words[0])
 				{
-					case "*":
-						if(message) messages.push(message);
-						message = new MailMessage();
-						break;
-						
-					case "From:":
-						message.from = words.slice(1).join(" ");
+					case "From:":		
+						msg.from = words.slice(1).join(" ");
 						break;
 						
 					case "To:":
-						message.to = words.slice(1).join(" ");
+						msg.to = words.slice(1).join(" ");
 						break;
 						
 					case "Subject:":
-						message.subject = words.slice(1).join(" ");
+						msg.subject = words.slice(1).join(" ");
 						break;
 						
 					case "Date:":
-						message.date = words.slice(1).join(" ");
+						msg.date = words.slice(1).join(" ");
 						break;
 				}
+				
 			}
-			if(message) messages.push(message);
-			return messages;
+			return msg;
 		}
 	}
 }
