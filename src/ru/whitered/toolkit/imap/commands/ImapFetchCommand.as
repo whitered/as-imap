@@ -33,7 +33,7 @@ package ru.whitered.toolkit.imap.commands
 		{
 			//return "FETCH " + startIndex + ":" + endIndex + " (BODY.PEEK[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS)";
 			//return "FETCH " + startIndex + ":" + endIndex + " (BODY.PEEK[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS BODY[TEXT])";
-			return "FETCH " + startIndex + ":" + endIndex + " (BODY[HEADER.FIELDS (Date From Subject To Alliance Pid)] BODY[TEXT])";
+			return "FETCH " + startIndex + ":" + endIndex + " (BODY[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS BODY[TEXT])";
 		}
 		
 		
@@ -64,33 +64,35 @@ package ru.whitered.toolkit.imap.commands
 			const messageSources:Vector.<String> = Vector.<String>(response.split("\r\n)\r\n"));
 			const messages:Vector.<MailMessage> = new Vector.<MailMessage>();
 			
-			var len:int;
 			var md1:Array;
 			var md2:Array;
 			var headers:String;
+			var flags:String;
 			var body:String;
+			
 			for each(var source:String in messageSources)
 			{
-				md1 = source.match(/\* (\d+) FETCH [^\r]+ \{(\d+)\}\r\n/mi);
+				md1 = source.match(/\* (\d+) FETCH \(\FLAGS \(([^\)]+)\) [^\r]+ \{(\d+)\}\r\n/mi);
 				if(!md1) continue;
 				
+				flags = md1[2];
+				
 				source = source.substr(source.indexOf(md1[0]) + md1[0].length);
-				len = int(md1[2]);
-				headers = StringUtil.substringBytes(source, 0, len);
+				headers = StringUtil.substringBytes(source, 0, md1[3]);
 				source = source.substr(headers.length);
 				
 				md2 = source.match(/BODY\[TEXT\] \{(\d+)\}\r\n/mi);
 				source = source.substr(source.indexOf(md2[0]) + md2[0].length);
 				body = StringUtil.substringBytes(source, 0, md2[1]);
 				
-				messages.push(parseMailMessage(md1[1], headers, body));
+				messages.push(parseMailMessage(md1[1], headers, body, flags));
 			}
 			return messages;
 		}
 
 		
 		
-		private function parseMailMessage(id:int, headers:String, body:String):MailMessage
+		private function parseMailMessage(id:int, headers:String, body:String, flags:String):MailMessage
 		{
 			const msg:MailMessage = new MailMessage();
 			msg.id = id;
@@ -120,7 +122,16 @@ package ru.whitered.toolkit.imap.commands
 						msg.date = words.slice(1).join(" ");
 						break;
 				}
-				
+			}
+			
+			for each(var flag:String in flags.split(" "))
+			{
+				switch(flag)
+				{
+					case "\\Seen":
+						msg.seen = true;
+						break;
+				}
 			}
 			return msg;
 		}

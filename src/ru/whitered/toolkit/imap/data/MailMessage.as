@@ -6,18 +6,26 @@ package ru.whitered.toolkit.imap.data
 	 */
 	public class MailMessage 
 	{
-		public var id:int;
-		public var from:String;
-		public var to:String;
-		public var subject:String;
-		public var date:String;
-		public var body:String;
+		public var id:int = 0;
+		public var body:String = null;
 		
+		public var from:String = null;
+		public var to:String = null;
+		public var subject:String = null;
+		public var date:String = null;
+		
+		public var seen:Boolean = false;
+
 		
 		
 		public function toString():String
 		{
-			return "[MailMessage from='" + from + "' to='" + to + "' subject='" + subject + "' date='" + date + "' body='" + body + "']";
+			return "[MailMessage from='" + from + 
+					"' to='" + to + 
+					"' subject='" + subject + 
+					"' date='" + date + 
+					"' body='" + body + 
+					"' seen='" + seen + "']";
 		}
 	}
 }

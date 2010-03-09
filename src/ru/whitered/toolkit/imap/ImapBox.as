@@ -1,16 +1,14 @@
 package ru.whitered.toolkit.imap 
 {
-	import ru.whitered.toolkit.imap.data.MailMessage;
-
-	import adobe.utils.CustomActions;
-	import ru.whitered.toolkit.imap.data.Mailbox;
-	import ru.whitered.toolkit.imap.commands.ImapFetchCommand;
 	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.commands.IImapCommand;
+	import ru.whitered.toolkit.imap.commands.ImapFetchCommand;
 	import ru.whitered.toolkit.imap.commands.ImapListCommand;
 	import ru.whitered.toolkit.imap.commands.ImapLoginCommand;
 	import ru.whitered.toolkit.imap.commands.ImapSelectCommand;
+	import ru.whitered.toolkit.imap.data.MailMessage;
+	import ru.whitered.toolkit.imap.data.Mailbox;
 	import ru.whitered.toolkit.imap.socket.ISocket;
 
 	import flash.events.ErrorEvent;
