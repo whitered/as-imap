@@ -23,7 +23,10 @@ package
 		{
 			imap = new ImapBox(new ImapSocket("192.168.1.51", 143)); 
 			imap.onConnect.addCallback(handleConnect);
-			imap.onLogin.addCallback(handleLogin );
+			
+			imap.onLoginSuccess.addCallback(handleLoginSuccess);
+			
+			imap.onLogoutSuccess.addCallback(handleLogoutSuccess);
 			
 			imap.onSelectSuccess.addCallback(handleSelectSuccess);
 			imap.onSelectFailure.addCallback(handleSelectFailure);
@@ -37,6 +40,7 @@ package
 		private function handleFetchSuccess(messages:Vector.<MailMessage>):void 
 		{
 			Logger.debug(this, "Messages fetched:", messages);
+			imap.logout();
 		}
 
 		
@@ -71,8 +75,15 @@ package
 		
 		
 			
-		private function handleLogin () : void 
+		private function handleLoginSuccess () : void 
 		{
+		}
+		
+		
+		
+		private function handleLogoutSuccess():void
+		{
+			Logger.debug(this, "LOGOUT OK");
 		}
 
 		

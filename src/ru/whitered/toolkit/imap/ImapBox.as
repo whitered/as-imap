@@ -1,5 +1,6 @@
 package ru.whitered.toolkit.imap 
 {
+	import ru.whitered.toolkit.imap.commands.ImapLogoutCommand;
 	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.commands.IImapCommand;
@@ -25,7 +26,10 @@ package ru.whitered.toolkit.imap
 		
 		public const onConnect:Signal = new Signal();
 		public const onDisconnect:Signal = new Signal();
-		public const onLogin:Signal = new Signal();
+		
+		public const onLoginSuccess:Signal = new Signal();
+		
+		public const onLogoutSuccess:Signal = new Signal();
 		
 		public const onSelectSuccess:Signal = new Signal();
 		public const onSelectFailure:Signal = new Signal();
@@ -152,11 +156,27 @@ package ru.whitered.toolkit.imap
 		
 		private function handleLoginSuccess():void 
 		{
-			onLogin.dispatch();
+			onLoginSuccess.dispatch();
 		}
 
 		
 		
+		//----------------------------------------------------------------------
+		// logout
+		//----------------------------------------------------------------------
+		public function logout():void
+		{
+			const command:ImapLogoutCommand = new ImapLogoutCommand();
+			command.onSuccess.addCallback(handleLogoutSuccess);
+			sendCommand(command); 
+		}
+		
+		
+		
+		private function handleLogoutSuccess():void
+		{
+			onLogoutSuccess.dispatch();
+		}
 		//----------------------------------------------------------------------
 		// list
 		//----------------------------------------------------------------------
