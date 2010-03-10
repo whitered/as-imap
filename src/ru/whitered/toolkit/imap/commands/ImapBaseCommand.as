@@ -1,6 +1,6 @@
 package ru.whitered.toolkit.imap.commands 
 {
-	import ru.whitered.toolkit.imap.ImapProcessor;
+	import ru.whitered.toolkit.imap.ImapSocket;
 	import ru.whitered.toolkit.imap.data.ImapEvent;
 
 	import flash.events.EventDispatcher;
@@ -37,7 +37,7 @@ package ru.whitered.toolkit.imap.commands
 		
 		public function processResult(message:String):void
 		{
-			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
+			const lines:Vector.<String> = Vector.<String>(message.split(ImapSocket.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			var event:ImapEvent;
 			switch(lastLineWords[1])

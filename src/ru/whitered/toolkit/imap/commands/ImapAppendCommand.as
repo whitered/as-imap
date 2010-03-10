@@ -1,6 +1,6 @@
 package ru.whitered.toolkit.imap.commands 
 {
-	import ru.whitered.toolkit.imap.ImapProcessor;
+	import ru.whitered.toolkit.imap.ImapSocket;
 	import ru.whitered.toolkit.imap.data.MailMessage;
 
 	import flash.utils.ByteArray;
@@ -25,9 +25,9 @@ package ru.whitered.toolkit.imap.commands
 				"Subject: " + message.subject,
 				"Content-Type: text/plain; charset=UTF-8; format=flowed",
 				"",
-				message.body.split("\r").join(ImapProcessor.NEWLINE),
+				message.body.split("\r").join(ImapSocket.NEWLINE),
 				""
-			].join(ImapProcessor.NEWLINE);
+			].join(ImapSocket.NEWLINE);
 			
 			
 			

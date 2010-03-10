@@ -1,74 +1,56 @@
 package ru.whitered.toolkit.imap 
 {
-	import ru.whitered.kote.Signal;
-	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.commands.ImapBaseCommand;
-	import ru.whitered.toolkit.imap.socket.ISocket;
 
 	import flash.events.ErrorEvent;
+	import flash.events.Event;
+	import flash.events.IOErrorEvent;
+	import flash.events.ProgressEvent;
+	import flash.events.SecurityErrorEvent;
+	import flash.net.Socket;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 
 	/**
 	 * @author whitered
 	 */
-	public class ImapProcessor 
+	public class ImapSocket extends Socket
 	{
 		public static const NEWLINE:String = "\r\n";
-		
-		public const onConnect			:Signal = new Signal();
-		public const onDisconnect		:Signal = new Signal();
-		
-		
 
 		
-		private var socket:ISocket;
 		private var buffer:String = "";
 		private var lastID:uint = 0;
-		
+
 		private const commands:Dictionary = new Dictionary();
 		private var currentCommand:ImapBaseCommand;
 		private var literalBytes:int = 0;
-		
-		
 
 		
 		
-		public function ImapProcessor(socket:ISocket) 
+		
+		
+		public function ImapSocket(server:String, port:int) 
 		{
-			this.socket = socket;
-			socket.onConnect.addCallback(handleSocketConnect);
-			socket.onDisconnect.addCallback(handleSocketDisconnect);
-			socket.onError.addCallback(handleSocketError);
-			socket.onData.addCallback(handleSocketData);
-		}
-
-		
-		
-		private function handleSocketConnect():void 
-		{
-			onConnect.dispatch();
-		}
-
-		
-		
-		private function handleSocketDisconnect():void 
-		{
-			onDisconnect.dispatch();
+			super(server, port);
+			addEventListener(ProgressEvent.SOCKET_DATA, handleSocketData);
+			addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSocketError); 
+			addEventListener(IOErrorEvent.IO_ERROR, handleSocketError);
+			
 		}
 
 		
 		
 		private function handleSocketError(event:ErrorEvent):void 
 		{
-			Logger.debug(this, "Socket error:", event);
+			trace(this, "Socket error:", event);
 		}
 
 		
 		
-		private function handleSocketData( message:String ):void 
+		private function handleSocketData(event:Event):void 
 		{
-			Logger.debug(this, "socketData:", message);
+			const message:String = readUTFBytes(bytesAvailable);
 			buffer += message;
 			
 			var commandBody:String = "";
@@ -109,7 +91,12 @@ package ru.whitered.toolkit.imap
 								
 							case "+":
 								var continuation:String = currentCommand.processContinuation(commandBody);
-								if(continuation) socket.send(continuation);
+								if(continuation)
+								{
+									writeUTFBytes(continuation + NEWLINE);
+									flush();
+								}
+								
 								commandBody = "";
 								break;
 								
@@ -137,7 +124,8 @@ package ru.whitered.toolkit.imap
 			const id:String = "CMD" + ++lastID;
 			commands[id] = command;
 			currentCommand = command;
-			socket.send(id + " " + command.getCommand());
+			writeUTFBytes(id + " " + command.getCommand() + NEWLINE);
+			flush();
 		}
 	}
 }
