@@ -1,36 +1,35 @@
 package ru.whitered.toolkit.imap.commands 
 {
-	import ru.whitered.kote.Signal;
-	import ru.whitered.toolkit.debug.logger.Logger;
+	import ru.whitered.toolkit.imap.ImapProcessor;
 
 	/**
 	 * @author whitered
 	 */
-	public class ImapLogoutCommand implements IImapCommand 
+	public class ImapLogoutCommand extends ImapBaseCommand 
 	{
-		public const onSuccess:Signal = new Signal();
 		
-		
-		
-		public function getCommand():String
+		public function ImapLogoutCommand() 
 		{
-			return "LOGOUT";
+			super("LOGOUT");
 		}
+
 		
 		
 		
-		public function processResult(message:String):void
+		override public function processResult(message:String):void 
 		{
-			const status:String = message.split(" ")[1];
-			if(status == "BYE") onSuccess.dispatch();
-			else Logger.debug(this, "Logout failed:", message);
-		}
-		
-		
-		
-		public function processContinuation(message:String):String
-		{
-			return null;
+			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
+			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
+			switch(lastLineWords[1])
+			{
+				case "BYE":
+					onSuccess.dispatch();
+					break;
+					
+				default:
+					onFailure.dispatch(lastLineWords.slice(2).join(" "));
+					break;
+			}
 		}
 	}
 }

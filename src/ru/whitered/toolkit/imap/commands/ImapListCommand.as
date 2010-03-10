@@ -5,26 +5,13 @@ package ru.whitered.toolkit.imap.commands
 	/**
 	 * @author whitered
 	 */
-	public class ImapListCommand implements IImapCommand 
+	public class ImapListCommand extends ImapBaseCommand 
 	{
 		// half-finished yet
 
-		public function getCommand():String
+		public function ImapListCommand():void
 		{
-			return "LIST \"\" \"\"";
-		}
-
-		
-		
-		public function processResult(message:String):void
-		{
-		}
-		
-		
-		
-		public function processContinuation(message:String):String
-		{
-			return null;
+			super("LIST \"\" \"\"");
 		}
 	}
 }

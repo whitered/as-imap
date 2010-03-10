@@ -2,7 +2,7 @@ package ru.whitered.toolkit.imap
 {
 	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.debug.logger.Logger;
-	import ru.whitered.toolkit.imap.commands.IImapCommand;
+	import ru.whitered.toolkit.imap.commands.ImapBaseCommand;
 	import ru.whitered.toolkit.imap.socket.ISocket;
 
 	import flash.events.ErrorEvent;
@@ -27,7 +27,7 @@ package ru.whitered.toolkit.imap
 		private var lastID:uint = 0;
 		
 		private const commands:Dictionary = new Dictionary();
-		private var currentCommand:IImapCommand;
+		private var currentCommand:ImapBaseCommand;
 		private var literalBytes:int = 0;
 		
 		
@@ -114,7 +114,7 @@ package ru.whitered.toolkit.imap
 								break;
 								
 							default:
-								var command:IImapCommand = commands[prefix];
+								var command:ImapBaseCommand = commands[prefix];
 								var body:String = commandBody;
 								currentCommand = null;
 								delete commands[prefix];
@@ -132,7 +132,7 @@ package ru.whitered.toolkit.imap
 
 		
 		
-		public function sendCommand(command:IImapCommand):void
+		public function sendCommand(command:ImapBaseCommand):void
 		{
 			const id:String = "CMD" + ++lastID;
 			commands[id] = command;

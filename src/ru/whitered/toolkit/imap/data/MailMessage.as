@@ -24,8 +24,9 @@ package ru.whitered.toolkit.imap.data
 					"' to='" + to + 
 					"' subject='" + subject + 
 					"' date='" + date + 
+					"' seen='" + seen + 
 					"' body='" + body + 
-					"' seen='" + seen + "']";
+					"']";
 		}
 	}
 }

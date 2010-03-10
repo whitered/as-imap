@@ -1,18 +1,13 @@
 package ru.whitered.toolkit.imap.commands 
 {
-	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.imap.ImapProcessor;
 	import ru.whitered.toolkit.imap.data.Mailbox;
 
 	/**
 	 * @author whitered
 	 */
-	public class ImapSelectCommand implements IImapCommand 
+	public class ImapSelectCommand extends ImapBaseCommand
 	{
-		public const onSuccess:Signal = new Signal();
-		public const onFailure:Signal = new Signal();
-		
-		
 		
 		private var name:String;
 		
@@ -21,18 +16,12 @@ package ru.whitered.toolkit.imap.commands
 		public function ImapSelectCommand(name:String) 
 		{
 			this.name = name;
+			super("SELECT " + name);
 		}
 
 		
 		
-		public function getCommand():String
-		{
-			return "SELECT " + name;
-		}
-		
-		
-		
-		public function processResult(message:String):void
+		override public function processResult(message:String):void
 		{
 			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
@@ -43,7 +32,7 @@ package ru.whitered.toolkit.imap.commands
 					
 					for each(var line:String in lines)
 					{
-						var words:Vector.<String> = Vector.<String>(line.split(" "));
+						var words:Vector.<String> = Vector.<String>(line.split(" ", 3));
 						if(words.length > 2 && words[2] == "EXISTS") mailbox.numMessagesExist = int(words[1]);
 					}
 					
@@ -54,13 +43,6 @@ package ru.whitered.toolkit.imap.commands
 					onFailure.dispatch(lastLineWords.slice(2).join(" "));
 					break;
 			}
-		}
-		
-		
-		
-		public function processContinuation(message:String):String
-		{
-			return null;
 		}
 	}
 }

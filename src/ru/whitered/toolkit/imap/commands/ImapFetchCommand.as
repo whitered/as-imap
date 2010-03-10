@@ -1,6 +1,5 @@
 package ru.whitered.toolkit.imap.commands 
 {
-	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.imap.ImapProcessor;
 	import ru.whitered.toolkit.imap.data.MailMessage;
 	import ru.whitered.toolkit.utils.StringUtil;
@@ -8,42 +7,25 @@ package ru.whitered.toolkit.imap.commands
 	/**
 	 * @author whitered
 	 */
-	public class ImapFetchCommand implements IImapCommand 
+	public class ImapFetchCommand extends ImapBaseCommand
 	{
-		public const onSuccess:Signal = new Signal();
-		public const onFailure:Signal = new Signal();
-		
-		
-		
-		private var startIndex:int;
-		private var endIndex:int;
-
 		
 		
 		public function ImapFetchCommand(startIndex:int, endIndex:int) 
 		{
-			this.startIndex = startIndex;
-			this.endIndex = endIndex;
+			super("FETCH " + startIndex + ":" + endIndex + " (BODY[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS BODY[TEXT])");
 		}
 
 		
 		
 		
-		public function getCommand():String
-		{
-			return "FETCH " + startIndex + ":" + endIndex + " (BODY[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS BODY[TEXT])";
-		}
-		
-		
-		
-		public function processResult(message:String):void
+		override public function processResult(message:String):void
 		{
 			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			switch(lastLineWords[1])
 			{
 				case "OK":
-					//const messages:Vector.<MailMessage> = parseMessages(lines);
 					const messages:Vector.<MailMessage> = parseResponse(message);
 					onSuccess.dispatch(messages);
 					break;
@@ -134,11 +116,5 @@ package ru.whitered.toolkit.imap.commands
 			return msg;
 		}
 		
-		
-		
-		public function processContinuation(message:String):String
-		{
-			return null;
-		}
 	}
 }
