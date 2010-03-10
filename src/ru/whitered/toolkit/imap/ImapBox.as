@@ -1,5 +1,7 @@
 package ru.whitered.toolkit.imap 
 {
+	import ru.whitered.toolkit.imap.commands.ImapStoreCommand;
+
 	import flash.utils.ByteArray;
 	import ru.whitered.toolkit.imap.commands.ImapAppendCommand;
 	import ru.whitered.toolkit.imap.commands.ImapLogoutCommand;
@@ -41,6 +43,9 @@ package ru.whitered.toolkit.imap
 		
 		public const onAppendSuccess	:Signal = new Signal();
 		public const onAppendFailure	:Signal = new Signal();
+		
+		public const onStoreSuccess	:Signal = new Signal();
+		public const onStoreFailure	:Signal = new Signal();
 		
 
 		
@@ -279,7 +284,9 @@ package ru.whitered.toolkit.imap
 		
 		
 		
-		//----------------------------------------------------------------------		// append		//----------------------------------------------------------------------
+		//----------------------------------------------------------------------
+		// append
+		//----------------------------------------------------------------------
 		public function append(mailbox:String, message:MailMessage):void
 		{
 			const command:ImapAppendCommand = new ImapAppendCommand(mailbox, message);
@@ -300,6 +307,32 @@ package ru.whitered.toolkit.imap
 		private function handleAppendFailure(mailbox:String, message:MailMessage, errorMessage:String):void 
 		{
 			onAppendFailure.dispatch(mailbox, message, errorMessage);
+		}
+		
+		
+		//----------------------------------------------------------------------
+		// store
+		//----------------------------------------------------------------------
+		public function store(indexFrom:int, indexTo:int, action:int, flags:Vector.<String>):void
+		{
+			const command:ImapStoreCommand = new ImapStoreCommand(indexFrom, indexTo, action, flags);
+			command.onSuccess.addCallback(handleStoreSuccess);
+			command.onFailure.addCallback(handleStoreFailure);
+			sendCommand(command);
+		}
+
+		
+		
+		private function handleStoreSuccess():void 
+		{
+			onStoreSuccess.dispatch();
+		}
+
+		
+		
+		private function handleStoreFailure(errorMessage:String):void 
+		{
+			onStoreFailure.dispatch(errorMessage);
 		}
 	}
 }

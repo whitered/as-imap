@@ -61,6 +61,7 @@ package
 		private function handleFetchSuccess(messages:Vector.<MailMessage>):void 
 		{
 			Logger.debug(this, "Messages fetched:", messages);
+			imap.store(1, messages.length, 1, Vector.<String>(["\\Deleted"]));
 		}
 
 		
@@ -96,15 +97,16 @@ package
 			
 		private function handleLoginSuccess () : void 
 		{
-			const msg:MailMessage = new MailMessage();
-			msg.date = "Fri,  5 Mar 2010 18:04:13 +0300 (MSK)";
-			msg.from = "Tom@Sawyer.es";
-			msg.to = "Huckleberry@Finn.ua";
-			msg.seen = true;
-			msg.subject = "I gotta kill ya";
-			msg.body = "How r u, asshole?";
-			
-			imap.append("INBOX", msg);
+//			const msg:MailMessage = new MailMessage();
+//			msg.date = "Fri,  5 Mar 2010 18:04:13 +0300 (MSK)";
+//			msg.from = "Tom@Sawyer.es";
+//			msg.to = "Huckleberry@Finn.ua";
+//			msg.seen = true;
+//			msg.subject = "I gotta kill ya";
+//			msg.body = "How r u, asshole?";
+//			
+//			imap.append("INBOX", msg);
+			imap.select("INBOX");
 		}
 
 		
