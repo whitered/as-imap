@@ -1,18 +1,15 @@
 package ru.whitered.toolkit.imap.commands 
 {
-	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.imap.ImapProcessor;
+	import ru.whitered.toolkit.imap.data.ImapEvent;
+
+	import flash.events.EventDispatcher;
 
 	/**
 	 * @author whitered
 	 */
-	public class ImapBaseCommand
+	public class ImapBaseCommand extends EventDispatcher
 	{
-		public const onSuccess:Signal = new Signal();
-		public const onFailure:Signal = new Signal();
-		
-		
-		
 		private var command:String;
 
 		
@@ -42,16 +39,19 @@ package ru.whitered.toolkit.imap.commands
 		{
 			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
+			var event:ImapEvent;
 			switch(lastLineWords[1])
 			{
 				case "OK":
-					onSuccess.dispatch();
+					event = new ImapEvent(ImapEvent.COMMAND_COMPLETE);
 					break;
 					
 				default:
-					onFailure.dispatch(lastLineWords.slice(2).join(" "));
+					event = new ImapEvent(ImapEvent.COMMAND_FAILED);
+					event.errorMessage = lastLineWords.slice(2).join(" ");
 					break;
 			}
+			dispatchEvent(event); 
 		}
 	}
 }

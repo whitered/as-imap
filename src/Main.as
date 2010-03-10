@@ -1,5 +1,6 @@
 package  
 {
+	import ru.whitered.toolkit.imap.data.ImapEvent;
 	import ru.whitered.toolkit.imap.commands.ImapLoginCommand;
 	import ru.whitered.toolkit.imap.ImapProcessor;
 	import ru.whitered.kote.Signal;
@@ -44,13 +45,13 @@ package
 		private function handleConnect():void 
 		{
 			const command:ImapLoginCommand = new ImapLoginCommand("tmp06", "qwerty");
-			command.onSuccess.addCallback(handleLoginSuccess);
+			command.addEventListener(ImapEvent.COMMAND_COMPLETE, handleLoginSuccess);
 			imap.sendCommand(command);
 		}
 
 		
 		
-		private function handleLoginSuccess():void 
+		private function handleLoginSuccess(event:ImapEvent):void 
 		{
 			deleteLetters("INBOX").addCallback(function(error:String):void 
 			{
@@ -65,7 +66,7 @@ package
 			const signal:Signal = new Signal();
 			const select:ImapSelectCommand = new ImapSelectCommand(mailbox);
 			
-			select.onSuccess.addCallback(function (mailbox:Mailbox):void
+			select.addEventListener(ImapEvent.COMMAND_COMPLETE, function (mailbox:Mailbox):void
 			{
 				if(mailbox.numMessagesExist == 0)
 				{
@@ -79,16 +80,16 @@ package
 				{
 					const store:ImapStoreCommand = new ImapStoreCommand(1, Vector.<String>(["\\Deleted"]), index || 1, (index > 0) ? 1 : mailbox.numMessagesExist);
 						
-					store.onSuccess.addCallback(function():void
+					store.addEventListener(ImapEvent.COMMAND_COMPLETE, function():void
 					{
 						const expunge:ImapExpungeCommand = new ImapExpungeCommand();
 								
-						expunge.onSuccess.addCallback(function ():void
+						expunge.addEventListener(ImapEvent.COMMAND_COMPLETE, function ():void
 						{
 							signal.dispatch(null);
 						});
 								
-						expunge.onFailure.addCallback(function (errorMessage:String):void
+						expunge.addEventListener(ImapEvent.COMMAND_FAILED, function (errorMessage:String):void
 						{
 							signal.dispatch(errorMessage);
 						});
@@ -96,7 +97,7 @@ package
 						imap.sendCommand(expunge);
 					});
 						
-					store.onFailure.addCallback(function(errorMessage:String):void
+					store.addEventListener(ImapEvent.COMMAND_FAILED, function(errorMessage:String):void
 					{
 						signal.dispatch(errorMessage);
 					});
@@ -105,7 +106,7 @@ package
 				}
 			});
 			
-			select.onFailure.addCallback(function (errorMessage:String):void
+			select.addEventListener(ImapEvent.COMMAND_FAILED, function (errorMessage:String):void
 			{
 				signal.dispatch(errorMessage);
 			});

@@ -1,6 +1,7 @@
 package ru.whitered.toolkit.imap.commands 
 {
 	import ru.whitered.toolkit.imap.ImapProcessor;
+	import ru.whitered.toolkit.imap.data.ImapEvent;
 	import ru.whitered.toolkit.imap.data.Mailbox;
 
 	/**
@@ -25,24 +26,26 @@ package ru.whitered.toolkit.imap.commands
 		{
 			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
+			var event:ImapEvent;
 			switch(lastLineWords[1])
 			{
 				case "OK":
-					const mailbox:Mailbox = new Mailbox(name);
+					event = new ImapEvent(ImapEvent.COMMAND_COMPLETE);
+					event.mailbox = new Mailbox(name);
 					
 					for each(var line:String in lines)
 					{
 						var words:Vector.<String> = Vector.<String>(line.split(" ", 3));
-						if(words.length > 2 && words[2] == "EXISTS") mailbox.numMessagesExist = int(words[1]);
+						if(words.length > 2 && words[2] == "EXISTS") event.mailbox.numMessagesExist = int(words[1]);
 					}
-					
-					onSuccess.dispatch(mailbox);
 					break;
 					
-				case "NO":
-					onFailure.dispatch(lastLineWords.slice(2).join(" "));
+				default:
+					event = new ImapEvent(ImapEvent.COMMAND_FAILED);
+					event.errorMessage = lastLineWords.slice(2).join(" ");
 					break;
 			}
+			dispatchEvent(event); 
 		}
 	}
 }
