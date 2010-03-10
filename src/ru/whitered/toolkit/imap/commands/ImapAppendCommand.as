@@ -1,7 +1,7 @@
 package ru.whitered.toolkit.imap.commands 
 {
 	import ru.whitered.kote.Signal;
-	import ru.whitered.toolkit.imap.ImapBox;
+	import ru.whitered.toolkit.imap.ImapProcessor;
 	import ru.whitered.toolkit.imap.data.MailMessage;
 
 	import flash.utils.ByteArray;
@@ -36,9 +36,9 @@ package ru.whitered.toolkit.imap.commands
 				"Subject: " + message.subject,
 				"Content-Type: text/plain; charset=UTF-8; format=flowed",
 				"",
-				message.body.split("\r").join(ImapBox.NEWLINE),
+				message.body.split("\r").join(ImapProcessor.NEWLINE),
 				""
-			].join(ImapBox.NEWLINE);
+			].join(ImapProcessor.NEWLINE);
 			
 			
 			
@@ -71,7 +71,7 @@ package ru.whitered.toolkit.imap.commands
 		
 		public function processResult(message:String):void
 		{
-			const lines:Vector.<String> = Vector.<String>(message.split(ImapBox.NEWLINE));
+			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			switch(lastLineWords[1])
 			{

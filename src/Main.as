@@ -1,15 +1,14 @@
 package  
 {
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
-	import flash.events.Event;
-	import ru.whitered.toolkit.imap.data.MailMessage;
-	import ru.whitered.toolkit.imap.data.Mailbox;
 	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.ImapBox;
+	import ru.whitered.toolkit.imap.data.MailMessage;
+	import ru.whitered.toolkit.imap.data.Mailbox;
 	import ru.whitered.toolkit.imap.socket.ImapSocket;
 
 	import flash.display.Sprite;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 
 	/**
 	 * @author whitered

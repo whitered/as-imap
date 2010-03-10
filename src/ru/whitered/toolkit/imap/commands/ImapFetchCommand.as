@@ -1,7 +1,7 @@
 package ru.whitered.toolkit.imap.commands 
 {
 	import ru.whitered.kote.Signal;
-	import ru.whitered.toolkit.imap.ImapBox;
+	import ru.whitered.toolkit.imap.ImapProcessor;
 	import ru.whitered.toolkit.imap.data.MailMessage;
 	import ru.whitered.toolkit.utils.StringUtil;
 
@@ -38,7 +38,7 @@ package ru.whitered.toolkit.imap.commands
 		
 		public function processResult(message:String):void
 		{
-			const lines:Vector.<String> = Vector.<String>(message.split(ImapBox.NEWLINE));
+			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			switch(lastLineWords[1])
 			{
