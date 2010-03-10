@@ -33,9 +33,9 @@ package ru.whitered.toolkit.imap.commands
 		
 		
 		
-		public function processResponse(response:String):void
+		public function processResult(message:String):void
 		{
-			const lines:Vector.<String> = Vector.<String>(response.split(ImapBox.NEWLINE));
+			const lines:Vector.<String> = Vector.<String>(message.split(ImapBox.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			switch(lastLineWords[1])
 			{
@@ -55,6 +55,13 @@ package ru.whitered.toolkit.imap.commands
 					onFailure.dispatch(lastLineWords.slice(2).join(" "));
 					break;
 			}
+		}
+		
+		
+		
+		public function processContinuation(message:String):String
+		{
+			return null;
 		}
 	}
 }

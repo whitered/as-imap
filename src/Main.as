@@ -1,5 +1,8 @@
 package  
 {
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
+	import flash.events.Event;
 	import ru.whitered.toolkit.imap.data.MailMessage;
 	import ru.whitered.toolkit.imap.data.Mailbox;
 	import ru.whitered.toolkit.debug.logger.Logger;
@@ -18,9 +21,18 @@ package
 		
 		
 		
-		
 		public function Main() 
 		{
+			const timer:Timer = new Timer(1000, 1);
+			timer.addEventListener(TimerEvent.TIMER_COMPLETE, handleTimerComplete);
+			timer.start();
+		}
+
+		
+		
+		private function handleTimerComplete(event:TimerEvent):void 
+		{
+			
 			imap = new ImapBox(new ImapSocket("192.168.1.51", 143)); 
 			imap.onConnect.addCallback(handleConnect);
 			
@@ -33,6 +45,15 @@ package
 			
 			imap.onFetchSuccess.addCallback(handleFetchSuccess);
 			imap.onFetchFailure.addCallback(handleFetchFailure);
+			
+			imap.onAppendSuccess.addCallback(handleAppendSuccess);
+		}
+
+		
+		
+		private function handleAppendSuccess(mailbox:String, message:MailMessage):void 
+		{
+			imap.select("INBOX");
 		}
 
 		
@@ -40,7 +61,6 @@ package
 		private function handleFetchSuccess(messages:Vector.<MailMessage>):void 
 		{
 			Logger.debug(this, "Messages fetched:", messages);
-			imap.logout();
 		}
 
 		
@@ -70,15 +90,23 @@ package
 		private function handleConnect() : void 
 		{
 			imap.login("tmp06", "qwerty");
-			imap.select("INBOX");
 		}
 		
 		
 			
 		private function handleLoginSuccess () : void 
 		{
+			const msg:MailMessage = new MailMessage();
+			msg.date = "Fri,  5 Mar 2010 18:04:13 +0300 (MSK)";
+			msg.from = "Tom@Sawyer.es";
+			msg.to = "Huckleberry@Finn.ua";
+			msg.seen = true;
+			msg.subject = "I gotta kill ya";
+			msg.body = "How r u, asshole?";
+			
+			imap.append("INBOX", msg);
 		}
-		
+
 		
 		
 		private function handleLogoutSuccess():void

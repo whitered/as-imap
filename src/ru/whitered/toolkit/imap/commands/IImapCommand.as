@@ -7,6 +7,7 @@ package ru.whitered.toolkit.imap.commands
 	public interface IImapCommand 
 	{
 		function getCommand():String;
-		function processResponse(response:String):void;
+		function processResult(message:String):void;
+		function processContinuation(message:String):String;
 	}
 }

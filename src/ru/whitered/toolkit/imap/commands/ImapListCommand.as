@@ -16,8 +16,15 @@ package ru.whitered.toolkit.imap.commands
 
 		
 		
-		public function processResponse(response:String):void
+		public function processResult(message:String):void
 		{
+		}
+		
+		
+		
+		public function processContinuation(message:String):String
+		{
+			return null;
 		}
 	}
 }

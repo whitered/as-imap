@@ -19,11 +19,18 @@ package ru.whitered.toolkit.imap.commands
 		
 		
 		
-		public function processResponse(response:String):void
+		public function processResult(message:String):void
 		{
-			const status:String = response.split(" ")[1];
+			const status:String = message.split(" ")[1];
 			if(status == "BYE") onSuccess.dispatch();
-			else Logger.debug(this, "Logout failed:", response);
+			else Logger.debug(this, "Logout failed:", message);
+		}
+		
+		
+		
+		public function processContinuation(message:String):String
+		{
+			return null;
 		}
 	}
 }

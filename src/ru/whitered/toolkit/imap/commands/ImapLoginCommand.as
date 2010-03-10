@@ -33,11 +33,18 @@ package ru.whitered.toolkit.imap.commands
 		
 		
 		
-		public function processResponse(response:String):void
+		public function processResult(message:String):void
 		{
-			const status:String = response.split(" ")[1];
+			const status:String = message.split(" ")[1];
 			if(status == "OK") onSuccess.dispatch();
-			else Logger.debug(this, "Login not OK:", response);
+			else Logger.debug(this, "Login not OK:", message);
+		}
+		
+		
+		
+		public function processContinuation(message:String):String
+		{
+			return null;
 		}
 	}
 }

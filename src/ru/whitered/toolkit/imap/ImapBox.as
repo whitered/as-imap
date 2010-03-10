@@ -1,5 +1,7 @@
 package ru.whitered.toolkit.imap 
 {
+	import flash.utils.ByteArray;
+	import ru.whitered.toolkit.imap.commands.ImapAppendCommand;
 	import ru.whitered.toolkit.imap.commands.ImapLogoutCommand;
 	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.debug.logger.Logger;
@@ -24,25 +26,31 @@ package ru.whitered.toolkit.imap
 		
 		
 		
-		public const onConnect:Signal = new Signal();
-		public const onDisconnect:Signal = new Signal();
+		public const onConnect			:Signal = new Signal();
+		public const onDisconnect		:Signal = new Signal();
 		
-		public const onLoginSuccess:Signal = new Signal();
+		public const onLoginSuccess	:Signal = new Signal();
 		
-		public const onLogoutSuccess:Signal = new Signal();
+		public const onLogoutSuccess	:Signal = new Signal();
 		
-		public const onSelectSuccess:Signal = new Signal();
-		public const onSelectFailure:Signal = new Signal();
+		public const onSelectSuccess	:Signal = new Signal();
+		public const onSelectFailure	:Signal = new Signal();
 		
-		public const onFetchSuccess:Signal = new Signal();
-		public const onFetchFailure:Signal = new Signal();
+		public const onFetchSuccess	:Signal = new Signal();
+		public const onFetchFailure	:Signal = new Signal();
+		
+		public const onAppendSuccess	:Signal = new Signal();
+		public const onAppendFailure	:Signal = new Signal();
 		
 
 		
 		private var socket:ISocket;
 		private var buffer:String = "";
 		private var lastID:uint = 0;
+		
 		private const commands:Dictionary = new Dictionary();
+		private var currentCommand:IImapCommand;
+		private var literalBytes:int = 0;
 		
 		
 		private var selectedMailbox:Mailbox;
@@ -93,7 +101,6 @@ package ru.whitered.toolkit.imap
 				lineLength = buffer.indexOf(NEWLINE) + 2;
 				if(lineLength < 2)
 				{
-					Logger.debug(this, "response not complete, rolling back:", buffer);
 					buffer = commandBody + buffer;
 					return;
 				}
@@ -103,32 +110,47 @@ package ru.whitered.toolkit.imap
 					buffer = buffer.substr(lineLength);
 					commandBody += line;
 					
-					//Logger.debug(this, "checking line:", line);
-					var words:Vector.<String> = Vector.<String>(line.split(" ", 3));
-					if(words.length > 0 && words[0] == "*")
+					if(literalBytes > 0)
 					{
-						continue;
+						var ba:ByteArray = new ByteArray();
+						ba.writeUTFBytes(line);
+						literalBytes -= ba.length; 
 					}
-					else if(words.length > 1 && (words[1] == "OK" || words[1] == "BAD" || words[1] == "NO"))
+					else
 					{
-						var command:IImapCommand = commands[words[0]];
-						if(command)
+						var prefix:String = Vector.<String>(line.split(" ", 2))[0];
+						switch(prefix)
 						{
-							//Logger.debug(this, "processing with command:", command, commandBody);
-							command.processResponse(commandBody);
-							delete commands[words[0]];
+							case ")\r\n":
+								break;
+								
+							case "*":
+							case "":
+								var md:Array = line.match(/ \{([\d]+)\}\r\n$/);
+								literalBytes = md ? int(md[1]) : 0;
+								break;
+								
+							case "+":
+								var continuation:String = currentCommand.processContinuation(commandBody);
+								if(continuation) socket.send(continuation);
+								commandBody = "";
+								break;
+								
+							default:
+								var command:IImapCommand = commands[prefix];
+								var body:String = commandBody;
+								currentCommand = null;
+								delete commands[prefix];
+								commandBody = "";
+								command.processResult(body);
+								break;
 						}
-						else
-						{
-							//Logger.debug(this, "processing without command:", message);
-							throw message;
-						}
-						commandBody = "";
 					}
 				}
 			}
 			
 			if(commandBody.length > 0) buffer = commandBody + buffer;
+			literalBytes = 0;
 		}
 
 		
@@ -137,6 +159,7 @@ package ru.whitered.toolkit.imap
 		{
 			const id:String = "CMD" + ++lastID;
 			commands[id] = command;
+			currentCommand = command;
 			socket.send(id + " " + command.getCommand());
 		}
 
@@ -252,6 +275,31 @@ package ru.whitered.toolkit.imap
 		private function handleFetchFailure(message:String):void 
 		{
 			onFetchFailure.dispatch(message);
+		}
+		
+		
+		
+		//----------------------------------------------------------------------		// append		//----------------------------------------------------------------------
+		public function append(mailbox:String, message:MailMessage):void
+		{
+			const command:ImapAppendCommand = new ImapAppendCommand(mailbox, message);
+			command.onSuccess.addCallback(handleAppendSuccess);
+			command.onFailure.addCallback(handleAppendFailure);
+			sendCommand(command);
+		}
+
+		
+		
+		private function handleAppendSuccess(mailbox:String, message:MailMessage):void 
+		{
+			onAppendSuccess.dispatch(mailbox, message);
+		}
+
+		
+		
+		private function handleAppendFailure(mailbox:String, message:MailMessage, errorMessage:String):void 
+		{
+			onAppendFailure.dispatch(mailbox, message, errorMessage);
 		}
 	}
 }

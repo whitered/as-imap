@@ -38,15 +38,15 @@ package ru.whitered.toolkit.imap.commands
 		
 		
 		
-		public function processResponse(response:String):void
+		public function processResult(message:String):void
 		{
-			const lines:Vector.<String> = Vector.<String>(response.split(ImapBox.NEWLINE));
+			const lines:Vector.<String> = Vector.<String>(message.split(ImapBox.NEWLINE));
 			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			switch(lastLineWords[1])
 			{
 				case "OK":
 					//const messages:Vector.<MailMessage> = parseMessages(lines);
-					const messages:Vector.<MailMessage> = parseResponse(response);
+					const messages:Vector.<MailMessage> = parseResponse(message);
 					onSuccess.dispatch(messages);
 					break;
 					
@@ -134,6 +134,13 @@ package ru.whitered.toolkit.imap.commands
 				}
 			}
 			return msg;
+		}
+		
+		
+		
+		public function processContinuation(message:String):String
+		{
+			return null;
 		}
 	}
 }
