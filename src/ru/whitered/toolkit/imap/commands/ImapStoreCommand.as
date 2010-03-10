@@ -13,26 +13,28 @@ package ru.whitered.toolkit.imap.commands
 		
 		
 		
-		private var indexFrom:int;
-		private var indexTo:int;
 		private var action:int;
 		private var flags:Vector.<String>;
+		private var startIndex:uint;
+		private var numMessages:uint;
 
 		
 		
-		public function ImapStoreCommand(indexFrom:int, indexTo:int, action:int, flags:Vector.<String>) 
+		public function ImapStoreCommand(action:int, flags:Vector.<String>, startIndex:uint, numMessages:uint = 1) 
 		{
-			this.indexFrom = indexFrom;
-			this.indexTo = indexTo;
 			this.action = action;
 			this.flags = flags;
+			this.startIndex = startIndex;
+			this.numMessages = numMessages;
 		}
 
 		
 		
 		public function getCommand():String
 		{
-			return "STORE " + indexFrom + ":" + indexTo + " " + (action < 0 ? "-" : action > 0 ? "+" : "") + "FLAGS (" + flags.join(" ") + ")";
+			const indexes:String = (numMessages == 1) ? startIndex + "" : (startIndex + ":" + (startIndex + numMessages - 1)); 
+			const modifier:String = (action < 0 ? "-" : action > 0 ? "+" : "") + "FLAGS";
+			return "STORE " + indexes + " " + modifier + " (" + flags.join(" ") + ")";
 		}
 		
 		
@@ -40,7 +42,7 @@ package ru.whitered.toolkit.imap.commands
 		public function processResult(message:String):void
 		{
 			const lines:Vector.<String> = Vector.<String>(message.split(ImapProcessor.NEWLINE));
-			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" ", 3));
+			const lastLineWords:Vector.<String> = Vector.<String>(lines[lines.length - 2].split(" "));
 			switch(lastLineWords[1])
 			{
 				case "OK":
@@ -49,7 +51,7 @@ package ru.whitered.toolkit.imap.commands
 					
 				case "NO":
 				case "BAD":
-					onFailure.dispatch(lastLineWords[2]);
+					onFailure.dispatch(lastLineWords.slice(2).join(" "));
 					break;
 			}
 		}

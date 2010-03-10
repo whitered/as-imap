@@ -1,8 +1,12 @@
 package  
 {
+	import ru.whitered.toolkit.imap.commands.ImapLoginCommand;
+	import ru.whitered.toolkit.imap.ImapProcessor;
+	import ru.whitered.kote.Signal;
 	import ru.whitered.toolkit.debug.logger.Logger;
-	import ru.whitered.toolkit.imap.ImapBox;
-	import ru.whitered.toolkit.imap.data.MailMessage;
+	import ru.whitered.toolkit.imap.commands.ImapExpungeCommand;
+	import ru.whitered.toolkit.imap.commands.ImapSelectCommand;
+	import ru.whitered.toolkit.imap.commands.ImapStoreCommand;
 	import ru.whitered.toolkit.imap.data.Mailbox;
 	import ru.whitered.toolkit.imap.socket.ImapSocket;
 
@@ -16,8 +20,8 @@ package
 	[SWF(backgroundColor="#FFFFFF", frameRate="31", width="640", height="480")]
 	public class Main extends Sprite 
 	{
-		private var imap:ImapBox;
-		
+		private var imap:ImapProcessor;
+
 		
 		
 		public function Main() 
@@ -31,91 +35,84 @@ package
 		
 		private function handleTimerComplete(event:TimerEvent):void 
 		{
-			
-			imap = new ImapBox(new ImapSocket("192.168.1.51", 143)); 
+			imap = new ImapProcessor(new ImapSocket("192.168.1.51", 143)); 
 			imap.onConnect.addCallback(handleConnect);
+		}
+
+		
+		
+		private function handleConnect():void 
+		{
+			const command:ImapLoginCommand = new ImapLoginCommand("tmp06", "qwerty");
+			command.onSuccess.addCallback(handleLoginSuccess);
+			imap.sendCommand(command);
+		}
+
+		
+		
+		private function handleLoginSuccess():void 
+		{
+			deleteLetters("INBOX").addCallback(function(error:String):void 
+			{
+				Logger.debug(this, error || "deleted OK");
+			});
+		}
+
+		
+		
+		public function deleteLetters(mailbox:String, index:int = 0):Signal
+		{
+			const signal:Signal = new Signal();
+			const select:ImapSelectCommand = new ImapSelectCommand(mailbox);
 			
-			imap.onLoginSuccess.addCallback(handleLoginSuccess);
+			select.onSuccess.addCallback(function (mailbox:Mailbox):void
+			{
+				if(mailbox.numMessagesExist == 0)
+				{
+					signal.dispatch("Mailbox is empty");
+				}
+				else if(mailbox.numMessagesExist < index)
+				{
+					signal.dispatch("Index too big: there are only " + mailbox.numMessagesExist + " messages in the mailbox");
+				}
+				else
+				{
+					const store:ImapStoreCommand = new ImapStoreCommand(1, Vector.<String>(["\\Deleted"]), index || 1, (index > 0) ? 1 : mailbox.numMessagesExist);
+						
+					store.onSuccess.addCallback(function():void
+					{
+						const expunge:ImapExpungeCommand = new ImapExpungeCommand();
+								
+						expunge.onSuccess.addCallback(function ():void
+						{
+							signal.dispatch(null);
+						});
+								
+						expunge.onFailure.addCallback(function (errorMessage:String):void
+						{
+							signal.dispatch(errorMessage);
+						});
+								
+						imap.sendCommand(expunge);
+					});
+						
+					store.onFailure.addCallback(function(errorMessage:String):void
+					{
+						signal.dispatch(errorMessage);
+					});
+						
+					imap.sendCommand(store);
+				}
+			});
 			
-			imap.onLogoutSuccess.addCallback(handleLogoutSuccess);
+			select.onFailure.addCallback(function (errorMessage:String):void
+			{
+				signal.dispatch(errorMessage);
+			});
 			
-			imap.onSelectSuccess.addCallback(handleSelectSuccess);
-			imap.onSelectFailure.addCallback(handleSelectFailure);
+			imap.sendCommand(select);
 			
-			imap.onFetchSuccess.addCallback(handleFetchSuccess);
-			imap.onFetchFailure.addCallback(handleFetchFailure);
-			
-			imap.onAppendSuccess.addCallback(handleAppendSuccess);
+			return signal;
 		}
-
-		
-		
-		private function handleAppendSuccess(mailbox:String, message:MailMessage):void 
-		{
-			imap.select("INBOX");
-		}
-
-		
-		
-		private function handleFetchSuccess(messages:Vector.<MailMessage>):void 
-		{
-			Logger.debug(this, "Messages fetched:", messages);
-			imap.store(1, messages.length, 1, Vector.<String>(["\\Deleted"]));
-		}
-
-		
-		
-		private function handleFetchFailure(message:String):void 
-		{
-			Logger.debug(this, "fetch failed:", message);
-		}
-
-		
-		
-		private function handleSelectSuccess(mailbox:Mailbox):void 
-		{
-			Logger.debug(this, "mailbox selected:", mailbox.name, ",", mailbox.numMessagesExist, "messages exist");
-			imap.fetchAll();
-		}
-
-		
-		
-		private function handleSelectFailure(message:String):void 
-		{
-			Logger.debug(this, "select failed:", message);
-		}
-
-		
-		
-		private function handleConnect() : void 
-		{
-			imap.login("tmp06", "qwerty");
-		}
-		
-		
-			
-		private function handleLoginSuccess () : void 
-		{
-//			const msg:MailMessage = new MailMessage();
-//			msg.date = "Fri,  5 Mar 2010 18:04:13 +0300 (MSK)";
-//			msg.from = "Tom@Sawyer.es";
-//			msg.to = "Huckleberry@Finn.ua";
-//			msg.seen = true;
-//			msg.subject = "I gotta kill ya";
-//			msg.body = "How r u, asshole?";
-//			
-//			imap.append("INBOX", msg);
-			imap.select("INBOX");
-		}
-
-		
-		
-		private function handleLogoutSuccess():void
-		{
-			Logger.debug(this, "LOGOUT OK");
-		}
-
-		
-		
 	}
 }
