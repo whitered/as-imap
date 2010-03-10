@@ -1,9 +1,9 @@
-package ru.whitered.toolkit.imap.commands 
+package ru.whitered.toolkit.imapSocket.commands 
 {
-	import ru.whitered.toolkit.imap.ImapSocket;
-	import ru.whitered.toolkit.imap.data.ImapEvent;
-	import ru.whitered.toolkit.imap.data.MailMessage;
-	import ru.whitered.toolkit.utils.StringUtil;
+	import flash.utils.ByteArray;
+	import ru.whitered.toolkit.imapSocket.ImapSocket;
+	import ru.whitered.toolkit.imapSocket.data.ImapEvent;
+	import ru.whitered.toolkit.imapSocket.data.MailMessage;
 
 	/**
 	 * @author whitered
@@ -61,12 +61,12 @@ package ru.whitered.toolkit.imap.commands
 				flags = md1[2];
 				
 				source = source.substr(source.indexOf(md1[0]) + md1[0].length);
-				headers = StringUtil.substringBytes(source, 0, md1[3]);
+				headers = substringBytes(source, 0, md1[3]);
 				source = source.substr(headers.length);
 				
 				md2 = source.match(/BODY\[TEXT\] \{(\d+)\}\r\n/mi);
 				source = source.substr(source.indexOf(md2[0]) + md2[0].length);
-				body = StringUtil.substringBytes(source, 0, md2[1]);
+				body = substringBytes(source, 0, md2[1]);
 				
 				messages.push(parseMailMessage(md1[1], headers, body, flags));
 			}
@@ -119,5 +119,16 @@ package ru.whitered.toolkit.imap.commands
 			return msg;
 		}
 		
+		
+		
+		private function substringBytes(source:String, startIndex:uint = 0, len:uint = 0xffffff):String
+		{
+			const ba:ByteArray = new ByteArray();
+			ba.writeUTFBytes(source);
+			ba.position = startIndex;
+			
+			const numBytes:uint = (len > ba.length - startIndex) ? ba.length - startIndex : len; 
+			return ba.readUTFBytes(numBytes);
+		}
 	}
 }

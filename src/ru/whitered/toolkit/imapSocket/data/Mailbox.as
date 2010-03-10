@@ -1,4 +1,4 @@
-package ru.whitered.toolkit.imap.data 
+package ru.whitered.toolkit.imapSocket.data 
 {
 
 	/**

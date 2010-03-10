@@ -1,6 +1,6 @@
-package ru.whitered.toolkit.imap 
+package ru.whitered.toolkit.imapSocket 
 {
-	import ru.whitered.toolkit.imap.commands.ImapBaseCommand;
+	import ru.whitered.toolkit.imapSocket.commands.ImapBaseCommand;
 
 	import flash.events.ErrorEvent;
 	import flash.events.Event;

@@ -1,7 +1,7 @@
-package ru.whitered.toolkit.imap.commands 
+package ru.whitered.toolkit.imapSocket.commands 
 {
-	import ru.whitered.toolkit.imap.ImapSocket;
-	import ru.whitered.toolkit.imap.data.MailMessage;
+	import ru.whitered.toolkit.imapSocket.ImapSocket;
+	import ru.whitered.toolkit.imapSocket.data.MailMessage;
 
 	import flash.utils.ByteArray;
 

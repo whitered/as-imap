@@ -1,8 +1,8 @@
-package ru.whitered.toolkit.imap.commands 
+package ru.whitered.toolkit.imapSocket.commands 
 {
-	import ru.whitered.toolkit.imap.ImapSocket;
-	import ru.whitered.toolkit.imap.data.ImapEvent;
-	import ru.whitered.toolkit.imap.data.Mailbox;
+	import ru.whitered.toolkit.imapSocket.ImapSocket;
+	import ru.whitered.toolkit.imapSocket.data.ImapEvent;
+	import ru.whitered.toolkit.imapSocket.data.Mailbox;
 
 	/**
 	 * @author whitered
