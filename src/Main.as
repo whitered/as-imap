@@ -1,7 +1,5 @@
 package  
 {
-	import ru.whitered.kote.Signal;
-	import ru.whitered.toolkit.debug.logger.Logger;
 	import ru.whitered.toolkit.imap.ImapSocket;
 	import ru.whitered.toolkit.imap.commands.ImapExpungeCommand;
 	import ru.whitered.toolkit.imap.commands.ImapLoginCommand;
@@ -11,6 +9,7 @@ package
 
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.TextEvent;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
@@ -20,6 +19,10 @@ package
 	[SWF(backgroundColor="#FFFFFF", frameRate="31", width="640", height="480")]
 	public class Main extends Sprite 
 	{
+		public static const SUCCESS:String = "Main.SUCCESS";
+		public static const FAILURE:String = "Main.FAILURE";
+		
+		
 		private var imap:ImapSocket;
 
 		
@@ -35,17 +38,31 @@ package
 		
 		private function handleTimerComplete(event:TimerEvent):void 
 		{
-			Logger.debug(this, "connecting...");
 			imap = new ImapSocket("192.168.1.51", 143); 
 			imap.addEventListener(Event.CONNECT, handleConnect);
+			
+			addEventListener(SUCCESS, handleSuccess);
+			addEventListener(FAILURE, handleFailure);
+		}
+
+		
+		
+		private function handleSuccess(event:Event):void 
+		{
+			trace("Success!");
+		}
+
+		
+		
+		private function handleFailure(event:TextEvent):void 
+		{
+			trace("FAILURE! " + event.text);
 		}
 
 		
 		
 		private function handleConnect(event:Event):void 
 		{
-			Logger.debug(this, "connected!");
-			Logger.debug(this, "logging in...");
 			const command:ImapLoginCommand = new ImapLoginCommand("tmp06", "qwerty");
 			command.addEventListener(ImapEvent.COMMAND_COMPLETE, handleLoginSuccess);
 			imap.sendCommand(command);
@@ -55,30 +72,24 @@ package
 		
 		private function handleLoginSuccess(event:ImapEvent):void 
 		{
-			Logger.debug(this, "logged in!");
-			Logger.debug(this, "deleting letters...");
-			deleteLetters("INBOX").addCallback(function(error:String):void 
-			{
-				Logger.debug(this, error || "deleted OK");
-			});
+			deleteLetters("INBOX");
 		}
 
 		
 		
-		public function deleteLetters(mailboxName:String, index:int = 0):Signal
+		public function deleteLetters(mailboxName:String, index:int = 0):void
 		{
-			const signal:Signal = new Signal();
 			const select:ImapSelectCommand = new ImapSelectCommand(mailboxName);
 			
 			select.addEventListener(ImapEvent.COMMAND_COMPLETE, function (event:ImapEvent):void
 			{
 				if(event.mailbox.numMessagesExist == 0)
 				{
-					signal.dispatch("Mailbox is empty");
+					dispatchEvent(new TextEvent(FAILURE, false, false, "Mailbox is empty"));
 				}
 				else if(event.mailbox.numMessagesExist < index)
 				{
-					signal.dispatch("Index too big: there are only " + event.mailbox.numMessagesExist + " messages in the mailbox");
+					dispatchEvent(new TextEvent(FAILURE, false, false, "Index too big: there are only " + event.mailbox.numMessagesExist + " messages in the mailbox"));
 				}
 				else
 				{
@@ -90,12 +101,12 @@ package
 								
 						expunge.addEventListener(ImapEvent.COMMAND_COMPLETE, function (event:ImapEvent):void
 						{
-							signal.dispatch(null);
+							dispatchEvent(new Event(SUCCESS));
 						});
 								
 						expunge.addEventListener(ImapEvent.COMMAND_FAILED, function (event:ImapEvent):void
 						{
-							signal.dispatch(event.errorMessage);
+							dispatchEvent(new Event(SUCCESS));
 						});
 								
 						imap.sendCommand(expunge);
@@ -103,8 +114,7 @@ package
 						
 					store.addEventListener(ImapEvent.COMMAND_FAILED, function(event:ImapEvent):void
 					{
-						signal.dispatch(event.errorMessage);
-					});
+						dispatchEvent(new TextEvent(FAILURE, false, false, event.errorMessage));					});
 						
 					imap.sendCommand(store);
 				}
@@ -112,12 +122,10 @@ package
 			
 			select.addEventListener(ImapEvent.COMMAND_FAILED, function (event:ImapEvent):void
 			{
-				signal.dispatch(event.errorMessage);
+				dispatchEvent(new TextEvent(FAILURE, false, false, event.errorMessage));
 			});
 			
 			imap.sendCommand(select);
-			
-			return signal;
 		}
 	}
 }
