@@ -1,7 +1,7 @@
 package ru.whitered.toolkit.imapSocket.commands 
 {
 	import ru.whitered.toolkit.imapSocket.ImapSocket;
-	import ru.whitered.toolkit.imapSocket.data.MailMessage;
+	import ru.whitered.toolkit.imapSocket.data.ImapMessage;
 
 	import flash.utils.ByteArray;
 
@@ -16,7 +16,7 @@ package ru.whitered.toolkit.imapSocket.commands
 
 		
 		
-		public function ImapAppendCommand(mailbox:String, message:MailMessage) 
+		public function ImapAppendCommand(mailbox:String, message:ImapMessage) 
 		{
 			literal = [	
 				"From: " + message.from,

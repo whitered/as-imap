@@ -11,8 +11,8 @@ package ru.whitered.toolkit.imapSocket.data
 		public static const COMMAND_FAILED:String = "ImapEvent.COMMAND_FAILED";
 		
 		public var errorMessage:String = null;
-		public var messages:Vector.<MailMessage> = null;
-		public var mailbox:Mailbox = null;
+		public var messages:Vector.<ImapMessage> = null;
+		public var mailbox:ImapMailbox = null;
 
 		
 		

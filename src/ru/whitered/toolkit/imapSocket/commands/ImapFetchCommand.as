@@ -3,7 +3,7 @@ package ru.whitered.toolkit.imapSocket.commands
 	import flash.utils.ByteArray;
 	import ru.whitered.toolkit.imapSocket.ImapSocket;
 	import ru.whitered.toolkit.imapSocket.data.ImapEvent;
-	import ru.whitered.toolkit.imapSocket.data.MailMessage;
+	import ru.whitered.toolkit.imapSocket.data.ImapMessage;
 
 	/**
 	 * @author whitered
@@ -42,10 +42,10 @@ package ru.whitered.toolkit.imapSocket.commands
 
 		
 		
-		private function parseResponse(response:String):Vector.<MailMessage> 
+		private function parseResponse(response:String):Vector.<ImapMessage> 
 		{
 			const messageSources:Vector.<String> = Vector.<String>(response.split("\r\n)\r\n"));
-			const messages:Vector.<MailMessage> = new Vector.<MailMessage>();
+			const messages:Vector.<ImapMessage> = new Vector.<ImapMessage>();
 			
 			var md1:Array;
 			var md2:Array;
@@ -75,9 +75,9 @@ package ru.whitered.toolkit.imapSocket.commands
 
 		
 		
-		private function parseMailMessage(id:int, headers:String, body:String, flags:String):MailMessage
+		private function parseMailMessage(id:int, headers:String, body:String, flags:String):ImapMessage
 		{
-			const msg:MailMessage = new MailMessage();
+			const msg:ImapMessage = new ImapMessage();
 			msg.id = id;
 			msg.body = body;
 			

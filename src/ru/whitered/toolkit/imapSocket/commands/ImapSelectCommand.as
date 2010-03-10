@@ -2,7 +2,7 @@ package ru.whitered.toolkit.imapSocket.commands
 {
 	import ru.whitered.toolkit.imapSocket.ImapSocket;
 	import ru.whitered.toolkit.imapSocket.data.ImapEvent;
-	import ru.whitered.toolkit.imapSocket.data.Mailbox;
+	import ru.whitered.toolkit.imapSocket.data.ImapMailbox;
 
 	/**
 	 * @author whitered
@@ -31,7 +31,7 @@ package ru.whitered.toolkit.imapSocket.commands
 			{
 				case "OK":
 					event = new ImapEvent(ImapEvent.COMMAND_COMPLETE);
-					event.mailbox = new Mailbox(name);
+					event.mailbox = new ImapMailbox(name);
 					
 					for each(var line:String in lines)
 					{

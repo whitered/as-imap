@@ -4,7 +4,7 @@ package ru.whitered.toolkit.imapSocket.data
 	/**
 	 * @author whitered
 	 */
-	public class MailMessage 
+	public class ImapMessage 
 	{
 		public var id:int = 0;
 		public var body:String = null;
