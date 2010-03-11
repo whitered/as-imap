@@ -20,7 +20,7 @@ package ru.whitered.toolkit.imapSocket.data
 		
 		public function toString():String
 		{
-			return "[MailMessage from='" + from + 
+			return "[ImapMessage from='" + from + 
 					"' to='" + to + 
 					"' subject='" + subject + 
 					"' date='" + date + 
