@@ -1,5 +1,6 @@
 package ru.whitered.toolkit.imapSocket.data 
 {
+	import flash.utils.Dictionary;
 
 	/**
 	 * @author whitered
@@ -8,25 +9,27 @@ package ru.whitered.toolkit.imapSocket.data
 	{
 		public var id:int = 0;
 		public var body:String = null;
+		public var flags:Dictionary = null;
+		public var headers:Dictionary = null;
 		
-		public var from:String = null;
-		public var to:String = null;
-		public var subject:String = null;
-		public var date:String = null;
 		
-		public var seen:Boolean = false;
-
 		
 		
 		public function toString():String
 		{
-			return "[ImapMessage from='" + from + 
-					"' to='" + to + 
-					"' subject='" + subject + 
-					"' date='" + date + 
-					"' seen='" + seen + 
-					"' body='" + body + 
-					"']";
+			var headersStr:String = "";
+			if(headers) for (var h:String in headers) 
+			{
+				headersStr += " " + h + "=<" + headers[h] + ">";
+			}
+			
+			var flagsStr:String = "";
+			if(flags) for (var f:String in flags)
+			{
+				flagsStr += " " + f;
+			}
+			
+			return "[ImapMessage id=<"+ id + ">" + headersStr + flagsStr + " body=<" + body + ">]";
 		}
 	}
 }

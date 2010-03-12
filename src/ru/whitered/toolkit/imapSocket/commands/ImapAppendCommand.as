@@ -18,21 +18,19 @@ package ru.whitered.toolkit.imapSocket.commands
 		
 		public function ImapAppendCommand(mailbox:String, message:ImapMessage) 
 		{
-			literal = [	
-				"From: " + message.from,
-				"To: " + message.to,
-				"Date: " + message.date,
-				"Subject: " + message.subject,
-				"Content-Type: text/plain; charset=UTF-8; format=flowed",
-				"",
-				message.body.split("\r").join(ImapSocket.NEWLINE),
-				""
-			].join(ImapSocket.NEWLINE);
+			literal = "";
 			
+			for (var h:String in message.headers)
+			{
+				literal += h + ": " + message.headers[h] + ImapSocket.NEWLINE;
+			}
 			
+			literal += ImapSocket.NEWLINE;
+			literal += message.body.split("\r").join(ImapSocket.NEWLINE);
+			literal += ImapSocket.NEWLINE;
 			
 			const flags:Vector.<String> = new Vector.<String>();
-			if(message.seen) flags.push("\\Seen");
+			for (var f:String in message.flags) flags.push("\\" + f);
 			
 			const ba:ByteArray = new ByteArray();
 			ba.writeUTFBytes(literal);

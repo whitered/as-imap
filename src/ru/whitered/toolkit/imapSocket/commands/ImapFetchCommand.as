@@ -1,9 +1,11 @@
 package ru.whitered.toolkit.imapSocket.commands 
 {
-	import flash.utils.ByteArray;
 	import ru.whitered.toolkit.imapSocket.ImapSocket;
 	import ru.whitered.toolkit.imapSocket.data.ImapEvent;
 	import ru.whitered.toolkit.imapSocket.data.ImapMessage;
+
+	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
 
 	/**
 	 * @author whitered
@@ -11,13 +13,15 @@ package ru.whitered.toolkit.imapSocket.commands
 	public class ImapFetchCommand extends ImapBaseCommand
 	{
 		
+		private var data:String;
 		
-		public function ImapFetchCommand(startIndex:int, endIndex:int) 
+		
+		
+		public function ImapFetchCommand(parameters:ImapFetchParameters) 
 		{
-			super("FETCH " + startIndex + ":" + endIndex + " (BODY[HEADER.FIELDS (Date From Subject To Alliance Pid)] FLAGS BODY[TEXT])");
+			super(parameters.toString());
 		}
 
-		
 		
 		
 		override public function processResult(message:String):void
@@ -29,7 +33,8 @@ package ru.whitered.toolkit.imapSocket.commands
 			{
 				case "OK":
 					event = new ImapEvent(ImapEvent.COMMAND_COMPLETE);
-					event.messages = parseResponse(message);
+					data = message;
+					event.messages = parseRoot();
 					break;
 					
 				default:
@@ -42,93 +47,111 @@ package ru.whitered.toolkit.imapSocket.commands
 
 		
 		
-		private function parseResponse(response:String):Vector.<ImapMessage> 
+		private function match(regexp:RegExp):Array
 		{
-			const messageSources:Vector.<String> = Vector.<String>(response.split("\r\n)\r\n"));
-			const messages:Vector.<ImapMessage> = new Vector.<ImapMessage>();
-			
-			var md1:Array;
-			var md2:Array;
-			var headers:String;
-			var flags:String;
-			var body:String;
-			
-			for each(var source:String in messageSources)
+			var md:Array = data.match(regexp);
+			if(md)
 			{
-				md1 = source.match(/\* (\d+) FETCH \(\FLAGS \(([^\)]+)\) [^\r]+ \{(\d+)\}\r\n/mi);
-				if(!md1) continue;
+				data = data.slice(data.indexOf(md[0]) + md[0].length);
 				
-				flags = md1[2];
-				
-				source = source.substr(source.indexOf(md1[0]) + md1[0].length);
-				headers = substringBytes(source, 0, md1[3]);
-				source = source.substr(headers.length);
-				
-				md2 = source.match(/BODY\[TEXT\] \{(\d+)\}\r\n/mi);
-				source = source.substr(source.indexOf(md2[0]) + md2[0].length);
-				body = substringBytes(source, 0, md2[1]);
-				
-				messages.push(parseMailMessage(md1[1], headers, body, flags));
 			}
-			return messages;
+			return md;
+		}
+		
+		
+		
+		private function readBytes(num:int):String
+		{
+			const ba:ByteArray = new ByteArray();
+			ba.writeUTFBytes(data);
+			ba.position = 0;
+			const res:String = ba.readUTFBytes(num);
+						ba.position = num;
+			data = ba.readUTFBytes(ba.length - num);
+			return res;
 		}
 
 		
 		
-		private function parseMailMessage(id:int, headers:String, body:String, flags:String):ImapMessage
+		private function parseRoot():Vector.<ImapMessage>
 		{
-			const msg:ImapMessage = new ImapMessage();
-			msg.id = id;
-			msg.body = body;
+			var word:String;
+			var md:Array;
 			
-			var words:Array;
-			for each(var header:String in headers.split("\r\n"))
+			const messages:Vector.<ImapMessage> = new Vector.<ImapMessage>();
+			
+			while(data.length > 0)
 			{
-				words = header.split(" ");
-				if(words.length < 2) continue;
+				word = match(/([^\s]+)/)[1];
 				
-				switch(words[0])
+				switch(word)
 				{
-					case "From:":		
-						msg.from = words.slice(1).join(" ");
+					case "*":
+						md = match(/(\d+) FETCH /);
+						messages.push(parseMessage(md[1]));
 						break;
 						
-					case "To:":
-						msg.to = words.slice(1).join(" ");
-						break;
-						
-					case "Subject:":
-						msg.subject = words.slice(1).join(" ");
-						break;
-						
-					case "Date:":
-						msg.date = words.slice(1).join(" ");
-						break;
+					default:
+						// last line with command status
+						return messages;
 				}
+				
 			}
 			
-			for each(var flag:String in flags.split(" "))
-			{
-				switch(flag)
-				{
-					case "\\Seen":
-						msg.seen = true;
-						break;
-				}
-			}
-			return msg;
+			return messages;
 		}
 		
 		
 		
-		private function substringBytes(source:String, startIndex:uint = 0, len:uint = 0xffffff):String
+		private function parseMessage(id:int):ImapMessage
 		{
-			const ba:ByteArray = new ByteArray();
-			ba.writeUTFBytes(source);
-			ba.position = startIndex;
+			const msg:ImapMessage = new ImapMessage();
+			msg.id = id;
 			
-			const numBytes:uint = (len > ba.length - startIndex) ? ba.length - startIndex : len; 
-			return ba.readUTFBytes(numBytes);
+			var md:Array = match(/\(/);
+			for(;data.length > 0;)
+			{
+				md = match(/([^\s]+)/);
+				if(md) switch(md[0])
+				{
+					case "FLAGS":
+						md = match(/\(([^\)]*)\)/);
+						msg.flags = new Dictionary();
+						for each(var txtFlag:String in md[1].split(" "))
+						{
+							msg.flags[txtFlag.slice(1)] = true;
+						}
+						break;
+						
+					case "BODY[TEXT]":
+						md = match(/{(\d+)}\r\n/);
+						msg.body = readBytes(int(md[1]));
+						break;
+						
+					case "BODY[HEADER.FIELDS":
+						md = match(/{(\d+)}\r\n/);
+						msg.headers = parseHeaders(readBytes(int(md[1])));
+						break;
+						
+					case ")":
+						return msg;
+				}
+			}
+			return msg;
+		}
+
+		
+		
+		private function parseHeaders(str:String):Dictionary 
+		{
+			const dic:Dictionary = new Dictionary();
+			var md:Array;
+			for each(var s:String in str.split("\r\n"))
+			{
+				md = s.match(/(\w+): (.*)/);
+				if(md) dic[md[1]] = md[2];
+			}
+			return dic;
 		}
 	}
 }
