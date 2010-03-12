@@ -25,6 +25,8 @@ package ru.whitered.toolkit.imapSocket
 		private const commands:Dictionary = new Dictionary();
 		private var currentCommand:ImapBaseCommand;
 		private var literalBytes:int = 0;
+		
+		private var queue:Vector.<ImapBaseCommand>;
 
 		
 		
@@ -107,6 +109,13 @@ package ru.whitered.toolkit.imapSocket
 								delete commands[prefix];
 								commandBody = "";
 								command.processResult(body);
+								
+								if(queue)
+								{
+									const nextCommand:ImapBaseCommand = queue.shift();
+									if(queue.length == 0) queue = null;
+									sendCommand(nextCommand);
+								}
 								break;
 						}
 					}
@@ -121,6 +130,13 @@ package ru.whitered.toolkit.imapSocket
 		
 		public function sendCommand(command:ImapBaseCommand):void
 		{
+			if(currentCommand)
+			{
+				queue ||= new Vector.<ImapBaseCommand>();
+				queue.push(command);
+				return;
+			}
+			
 			const id:String = "CMD" + ++lastID;
 			commands[id] = command;
 			currentCommand = command;
