@@ -9,8 +9,8 @@ package ru.whitered.toolkit.imapSocket.data
 	{
 		public var id:int = 0;
 		public var body:String = null;
-		public var flags:Dictionary = null;
-		public var headers:Dictionary = null;
+		public const flags:Dictionary = new Dictionary();
+		public const headers:Dictionary = new Dictionary();
 		
 		
 		
@@ -18,13 +18,13 @@ package ru.whitered.toolkit.imapSocket.data
 		public function toString():String
 		{
 			var headersStr:String = "";
-			if(headers) for (var h:String in headers) 
+			for (var h:String in headers) 
 			{
 				headersStr += " " + h + "=<" + headers[h] + ">";
 			}
 			
 			var flagsStr:String = "";
-			if(flags) for (var f:String in flags)
+			for (var f:String in flags)
 			{
 				flagsStr += " " + f;
 			}

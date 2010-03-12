@@ -66,7 +66,8 @@ package ru.whitered.toolkit.imapSocket.commands
 			ba.writeUTFBytes(data);
 			ba.position = 0;
 			const res:String = ba.readUTFBytes(num);
-						ba.position = num;
+			
+			ba.position = num;
 			data = ba.readUTFBytes(ba.length - num);
 			return res;
 		}
@@ -116,7 +117,6 @@ package ru.whitered.toolkit.imapSocket.commands
 				{
 					case "FLAGS":
 						md = match(/\(([^\)]*)\)/);
-						msg.flags = new Dictionary();
 						for each(var txtFlag:String in md[1].split(" "))
 						{
 							msg.flags[txtFlag.slice(1)] = true;
@@ -130,7 +130,7 @@ package ru.whitered.toolkit.imapSocket.commands
 						
 					case "BODY[HEADER.FIELDS":
 						md = match(/{(\d+)}\r\n/);
-						msg.headers = parseHeaders(readBytes(int(md[1])));
+						parseHeaders(msg.headers, readBytes(int(md[1])));
 						break;
 						
 					case ")":
@@ -142,16 +142,14 @@ package ru.whitered.toolkit.imapSocket.commands
 
 		
 		
-		private function parseHeaders(str:String):Dictionary 
+		private function parseHeaders(dic:Dictionary, str:String):void 
 		{
-			const dic:Dictionary = new Dictionary();
 			var md:Array;
 			for each(var s:String in str.split("\r\n"))
 			{
 				md = s.match(/(\w+): (.*)/);
 				if(md) dic[md[1]] = md[2];
 			}
-			return dic;
 		}
 	}
 }
