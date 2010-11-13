@@ -25,24 +25,35 @@ package ru.whitered.toolkit.imapSocket
 		private const commands:Dictionary = new Dictionary();
 		private var currentCommand:ImapBaseCommand;
 		private var literalBytes:int = 0;
-		
 		private var queue:Vector.<ImapBaseCommand>;
+		
+		private var host:String;
+		private var port:int;
 
 		
 		
 		
 		
-		public function ImapSocket(server:String, port:int) 
+		public function ImapSocket(host:String, port:int) 
 		{
-			super(server, port);
+			this.port = port;
+			this.host = host;
+			super(host, port);
 			addEventListener(ProgressEvent.SOCKET_DATA, handleSocketData);
 			addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSocketError); 
 			addEventListener(IOErrorEvent.IO_ERROR, handleSocketError);
-			
+			addEventListener(Event.CONNECT, handleConnect);
 		}
 
-		
-		
+
+
+		private function handleConnect(event:Event) : void
+		{
+			sendNextCommand();
+		}
+
+
+
 		private function handleSocketError(event:ErrorEvent):void 
 		{
 			trace(this, "Socket error:", event);
@@ -110,12 +121,7 @@ package ru.whitered.toolkit.imapSocket
 								commandBody = "";
 								command.processResult(body);
 								
-								if(queue)
-								{
-									const nextCommand:ImapBaseCommand = queue.shift();
-									if(queue.length == 0) queue = null;
-									sendCommand(nextCommand);
-								}
+								sendNextCommand();
 								break;
 						}
 					}
@@ -125,12 +131,26 @@ package ru.whitered.toolkit.imapSocket
 			if(commandBody.length > 0) buffer = commandBody + buffer;
 			literalBytes = 0;
 		}
+		
+		
+		
+		private function sendNextCommand():void
+		{
+			if(queue)
+			{
+				const nextCommand:ImapBaseCommand = queue.shift();
+				if(queue.length == 0) queue = null;
+				sendCommand(nextCommand);
+			}
+		}
 
 		
 		
 		public function sendCommand(command:ImapBaseCommand):void
 		{
-			if(currentCommand)
+			if(!connected) connect(host, port);
+			
+			if(!connected || currentCommand)
 			{
 				queue ||= new Vector.<ImapBaseCommand>();
 				queue.push(command);
