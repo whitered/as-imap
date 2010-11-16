@@ -24,6 +24,7 @@ package ru.whitered.toolkit.imapSocket.commands
 			var event:ImapEvent;
 			switch(lastLineWords[1])
 			{
+				case "OK":
 				case "BYE":
 					event = new ImapEvent(ImapEvent.COMMAND_COMPLETE);
 					break;
